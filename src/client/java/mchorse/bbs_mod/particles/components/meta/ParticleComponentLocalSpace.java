@@ -56,6 +56,6 @@ public class ParticleComponentLocalSpace extends ParticleComponentBase implement
     @Override
     public int getSortingIndex()
     {
-        return 1000;
+        return 6;
     }
 }

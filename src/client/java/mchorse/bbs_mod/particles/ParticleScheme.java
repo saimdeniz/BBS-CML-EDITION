@@ -38,6 +38,9 @@ public class ParticleScheme extends ValueGroup {
     /* Particle's curves */
     public Map<String, ParticleCurve> curves = new HashMap<>();
 
+    /* Particle's events */
+    public Map<String, ParticleEvent> events = new HashMap<>();
+
     /* Particle's components */
     public List<ParticleComponentBase> components = new ArrayList<>();
     public List<IComponentEmitterInitialize> emitterInitializes;
@@ -96,6 +99,27 @@ public class ParticleScheme extends ValueGroup {
         this.parser.register("variable.emitter_random_2");
         this.parser.register("variable.emitter_random_3");
         this.parser.register("variable.emitter_random_4");
+
+        /* Query mappings */
+        this.parser.register("query.particle_age");
+        this.parser.register("query.particle_lifetime");
+        this.parser.register("query.particle_random_1");
+        this.parser.register("query.particle_random_2");
+        this.parser.register("query.particle_random_3");
+        this.parser.register("query.particle_random_4");
+
+        this.parser.register("query.emitter_age");
+        this.parser.register("query.emitter_lifetime");
+        this.parser.register("query.emitter_random_1");
+        this.parser.register("query.emitter_random_2");
+        this.parser.register("query.emitter_random_3");
+        this.parser.register("query.emitter_random_4");
+
+        this.parser.register("query.is_on_fire");
+        this.parser.register("query.is_sneaking");
+        this.parser.register("query.is_alive");
+        this.parser.register("query.is_baby");
+        this.parser.register("query.ground_speed");
     }
 
     public void setup()

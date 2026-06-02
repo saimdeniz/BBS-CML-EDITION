@@ -80,6 +80,17 @@ public class Particle
         return this.dead;
     }
 
+    public double getDistanceSq(ParticleEmitter emitter)
+    {
+        Vector3d pos = this.getGlobalPosition(emitter);
+
+        double dx = emitter.cX - pos.x;
+        double dy = emitter.cY - pos.y;
+        double dz = emitter.cZ - pos.z;
+
+        return dx * dx + dy * dy + dz * dz;
+    }
+
     public double getAge(float transition)
     {
         return (this.age + transition) / 20D;
@@ -124,17 +135,30 @@ public class Particle
 
         if (!this.manual)
         {
-            float rotationAcceleration = this.rotationAcceleration / 20F -this.rotationDrag * this.rotationVelocity;
+            float rotationAcceleration = this.rotationAcceleration / 20F - this.rotationDrag * this.rotationVelocity;
 
             this.rotationVelocity += rotationAcceleration / 20F;
             this.rotation = this.initialRotation + this.rotationVelocity * this.age;
 
             /* Position */
-            Vector3f vec = new Vector3f(this.speed);
-            vec.mul(-(this.drag + this.dragFactor));
+            Vector3f dragVec = new Vector3f(this.speed);
+            dragVec.mul(-(this.drag + this.dragFactor));
+            dragVec.mul(1 / 20F);
 
-            this.acceleration.add(vec);
-            this.acceleration.div(20F);
+            if (this.speed.length() - dragVec.length() <= 0)
+            {
+                this.speed.set(0, 0, 0);
+            }
+            else
+            {
+                this.speed.add(dragVec);
+            }
+
+            Vector3f scaledAccel = new Vector3f(this.acceleration);
+            scaledAccel.mul(1 / 20F);
+            this.speed.add(scaledAccel);
+
+            Vector3f vec = new Vector3f();
 
             if (this.relativeVelocity)
             {
@@ -143,18 +167,13 @@ public class Particle
                     this.matrix.transform(this.speed);
                 }
 
-                this.speed.add(this.acceleration);
-
                 vec.set(this.speed);
-
                 vec.x *= this.accelerationFactor.x;
                 vec.y *= this.accelerationFactor.y;
                 vec.z *= this.accelerationFactor.z;
             }
             else
             {
-                this.speed.add(this.acceleration);
-
                 vec.set(this.speed);
                 vec.x *= this.accelerationFactor.x;
                 vec.y *= this.accelerationFactor.y;
@@ -179,6 +198,7 @@ public class Particle
         }
 
         this.age += 1;
+        this.acceleration.set(0, 0, 0);
     }
 
     public void setupMatrix(ParticleEmitter emitter)
@@ -209,5 +229,38 @@ public class Particle
             this.matrix.identity().scale(emitter.rotation.getRow(0, Vectors.TEMP_3F).length());
             this.matrixSet = true;
         }
+    }
+
+    public Particle softCopy(Particle to)
+    {
+        to.age = this.age;
+        to.lifetime = this.lifetime;
+        to.relativePosition = this.relativePosition;
+        to.relativeRotation = this.relativeRotation;
+        to.relativeVelocity = this.relativeVelocity;
+        to.textureScale = this.textureScale;
+        to.manual = this.manual;
+        to.rotation = this.rotation;
+        to.initialRotation = this.initialRotation;
+        to.prevRotation = this.prevRotation;
+        to.rotationVelocity = this.rotationVelocity;
+        to.rotationAcceleration = this.rotationAcceleration;
+        to.rotationDrag = this.rotationDrag;
+        to.position.set(this.position);
+        to.initialPosition.set(this.initialPosition);
+        to.prevPosition.set(this.prevPosition);
+        to.matrix.set(this.matrix);
+        to.matrixSet = this.matrixSet;
+        to.speed.set(this.speed);
+        to.acceleration.set(this.acceleration);
+        to.accelerationFactor.set(this.accelerationFactor);
+        to.drag = this.drag;
+        to.dragFactor = this.dragFactor;
+        to.r = this.r;
+        to.g = this.g;
+        to.b = this.b;
+        to.a = this.a;
+        to.localValues.putAll(this.localValues);
+        return to;
     }
 }

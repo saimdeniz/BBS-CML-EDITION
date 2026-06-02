@@ -331,7 +331,33 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
         this.vertices[3].set(-this.w / 2, this.h / 2, 0, 1);
         this.transform.identity();
 
-        if (this.facing == CameraFacing.ROTATE_XYZ || this.facing == CameraFacing.LOOKAT_XYZ)
+        float yaw = 0;
+        float pitch = 0;
+
+        if (this.facing == CameraFacing.DIRECTION_X || this.facing == CameraFacing.DIRECTION_Y || this.facing == CameraFacing.DIRECTION_Z)
+        {
+            Vector3f speed = new Vector3f(particle.speed);
+            double lenSq = speed.lengthSquared();
+            if (lenSq < 0.0001)
+            {
+                speed.set(1, 0, 0);
+            }
+            else
+            {
+                speed.normalize();
+            }
+
+            double yawVal = Math.atan2(-speed.x, speed.z);
+            yawVal = Math.toDegrees(yawVal);
+            if (yawVal < -180) yawVal += 360;
+            else if (yawVal > 180) yawVal -= 360;
+            yaw = (float) -yawVal;
+
+            double pitchVal = Math.atan2(speed.y, Math.sqrt(speed.x * speed.x + speed.z * speed.z));
+            pitch = (float) -Math.toDegrees(pitchVal);
+        }
+
+        if (this.facing == CameraFacing.ROTATE_XYZ || this.facing == CameraFacing.LOOKAT_XYZ || this.facing == CameraFacing.ROTATE_Y)
         {
             this.rotation.identity();
             this.rotation.rotateY(entityYaw / 180 * (float) Math.PI);
@@ -340,10 +366,109 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
             this.rotation.rotateX(entityPitch / 180 * (float) Math.PI);
             this.transform.mul(this.rotation);
         }
-        else if (this.facing == CameraFacing.ROTATE_Y || this.facing == CameraFacing.LOOKAT_Y)
+        else if (this.facing == CameraFacing.LOOKAT_Y)
         {
             this.rotation.identity();
             this.rotation.rotateY(entityYaw / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.DIRECTION_X)
+        {
+            this.rotation.identity();
+            this.rotation.rotateY(yaw / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateX(pitch / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateY(90.0F / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.DIRECTION_Y)
+        {
+            this.rotation.identity();
+            this.rotation.rotateY(yaw / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateX((pitch + 90.0F) / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.DIRECTION_Z)
+        {
+            this.rotation.identity();
+            this.rotation.rotateY(yaw / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateX(pitch / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.LOOKAT_DIRECTION)
+        {
+            Vector3f dir = new Vector3f(particle.speed);
+            if (dir.lengthSquared() < 0.0001F)
+            {
+                this.rotation.identity();
+                this.rotation.rotateY(entityYaw / 180 * (float) Math.PI);
+                this.transform.mul(this.rotation);
+                this.rotation.identity();
+                this.rotation.rotateX(entityPitch / 180 * (float) Math.PI);
+                this.transform.mul(this.rotation);
+            }
+            else
+            {
+                dir.normalize();
+                Vector3f forward = new Vector3f((float) -px, (float) -py, (float) -pz);
+                if (forward.lengthSquared() < 0.0001F)
+                {
+                    forward.set(0, 0, 1);
+                }
+                else
+                {
+                    forward.normalize();
+                }
+
+                Vector3f right = new Vector3f();
+                dir.cross(forward, right);
+                if (right.lengthSquared() < 0.0001F)
+                {
+                    right.set(1, 0, 0);
+                }
+                else
+                {
+                    right.normalize();
+                }
+
+                Vector3f up = new Vector3f();
+                forward.cross(right, up);
+                up.normalize();
+
+                Matrix4f lookatMat = new Matrix4f();
+                lookatMat.m00(right.x);   lookatMat.m01(right.y);   lookatMat.m02(right.z);   lookatMat.m03(0.0f);
+                lookatMat.m10(up.x);      lookatMat.m11(up.y);      lookatMat.m12(up.z);      lookatMat.m13(0.0f);
+                lookatMat.m20(forward.x); lookatMat.m21(forward.y); lookatMat.m22(forward.z); lookatMat.m23(0.0f);
+                lookatMat.m30(0.0f);      lookatMat.m31(0.0f);      lookatMat.m32(0.0f);      lookatMat.m33(1.0f);
+                this.transform.mul(lookatMat);
+            }
+        }
+        else if (this.facing == CameraFacing.EMITTER_TRANSFORM_XY)
+        {
+            this.rotation.set(emitter.rotation);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.EMITTER_TRANSFORM_XZ)
+        {
+            this.rotation.set(emitter.rotation);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateX(90.0F / 180 * (float) Math.PI);
+            this.transform.mul(this.rotation);
+        }
+        else if (this.facing == CameraFacing.EMITTER_TRANSFORM_YZ)
+        {
+            this.rotation.set(emitter.rotation);
+            this.transform.mul(this.rotation);
+            this.rotation.identity();
+            this.rotation.rotateY(90.0F / 180 * (float) Math.PI);
             this.transform.mul(this.rotation);
         }
 
@@ -367,10 +492,18 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
 
     private void build(BufferBuilder builder, VertexFormat format, Matrix4f matrix, Particle particle, int overlay)
     {
-        float u1 = this.u1 / (float) this.textureWidth;
-        float u2 = this.u2 / (float) this.textureWidth;
-        float v1 = this.v1 / (float) this.textureHeight;
-        float v2 = this.v2 / (float) this.textureHeight;
+        float tw = this.textureWidth <= 0 ? 1F : (float) this.textureWidth;
+        float th = this.textureHeight <= 0 ? 1F : (float) this.textureHeight;
+
+        float u1 = MathUtils.clamp(this.u1 / tw, 0F, 1F);
+        float u2 = MathUtils.clamp(this.u2 / tw, 0F, 1F);
+        float v1 = MathUtils.clamp(this.v1 / th, 0F, 1F);
+        float v2 = MathUtils.clamp(this.v2 / th, 0F, 1F);
+
+        if (Float.isNaN(u1)) u1 = 0F;
+        if (Float.isNaN(u2)) u2 = 1F;
+        if (Float.isNaN(v1)) v1 = 0F;
+        if (Float.isNaN(v2)) v2 = 1F;
 
         for (Vector4f vertex : this.vertices)
         {
@@ -434,10 +567,18 @@ public class ParticleComponentAppearanceBillboard extends ParticleComponentBase 
 
     private void buildUI(BufferBuilder builder, Matrix4f matrix, Particle particle)
     {
-        float u1 = this.u1 / (float) this.textureWidth;
-        float u2 = this.u2 / (float) this.textureWidth;
-        float v1 = this.v1 / (float) this.textureHeight;
-        float v2 = this.v2 / (float) this.textureHeight;
+        float tw = this.textureWidth <= 0 ? 1F : (float) this.textureWidth;
+        float th = this.textureHeight <= 0 ? 1F : (float) this.textureHeight;
+
+        float u1 = MathUtils.clamp(this.u1 / tw, 0F, 1F);
+        float u2 = MathUtils.clamp(this.u2 / tw, 0F, 1F);
+        float v1 = MathUtils.clamp(this.v1 / th, 0F, 1F);
+        float v2 = MathUtils.clamp(this.v2 / th, 0F, 1F);
+
+        if (Float.isNaN(u1)) u1 = 0F;
+        if (Float.isNaN(u2)) u2 = 1F;
+        if (Float.isNaN(v1)) v1 = 0F;
+        if (Float.isNaN(v2)) v2 = 1F;
 
         for (Vector4f vertex : this.vertices)
         {

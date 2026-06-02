@@ -12,9 +12,11 @@ import mchorse.bbs_mod.particles.components.expiration.ParticleComponentExpireIn
 import mchorse.bbs_mod.particles.components.expiration.ParticleComponentExpireNotInBlocks;
 import mchorse.bbs_mod.particles.components.expiration.ParticleComponentKillPlane;
 import mchorse.bbs_mod.particles.components.expiration.ParticleComponentParticleLifetime;
+import mchorse.bbs_mod.particles.components.lifetime.ParticleComponentEmitterLifetimeEvents;
 import mchorse.bbs_mod.particles.components.lifetime.ParticleComponentLifetimeExpression;
 import mchorse.bbs_mod.particles.components.lifetime.ParticleComponentLifetimeLooping;
 import mchorse.bbs_mod.particles.components.lifetime.ParticleComponentLifetimeOnce;
+import mchorse.bbs_mod.particles.components.lifetime.ParticleComponentParticleLifetimeEvents;
 import mchorse.bbs_mod.particles.components.meta.ParticleComponentInitialization;
 import mchorse.bbs_mod.particles.components.meta.ParticleComponentLocalSpace;
 import mchorse.bbs_mod.particles.components.motion.ParticleComponentInitialSpeed;
@@ -76,6 +78,7 @@ public class ParticleParser
         this.components.put("emitter_lifetime_looping", ParticleComponentLifetimeLooping.class);
         this.components.put("emitter_lifetime_once", ParticleComponentLifetimeOnce.class);
         this.components.put("emitter_lifetime_expression", ParticleComponentLifetimeExpression.class);
+        this.components.put("emitter_lifetime_events", ParticleComponentEmitterLifetimeEvents.class);
 
         /* Shapes */
         this.components.put("emitter_shape_disc", ParticleComponentShapeDisc.class);
@@ -86,6 +89,7 @@ public class ParticleParser
 
         /* Lifetime particle */
         this.components.put("particle_lifetime_expression", ParticleComponentParticleLifetime.class);
+        this.components.put("particle_lifetime_events", ParticleComponentParticleLifetimeEvents.class);
         this.components.put("particle_expire_if_in_blocks", ParticleComponentExpireInBlocks.class);
         this.components.put("particle_expire_if_not_in_blocks", ParticleComponentExpireNotInBlocks.class);
         this.components.put("particle_kill_plane", ParticleComponentKillPlane.class);
@@ -146,6 +150,16 @@ public class ParticleParser
             }
         }
 
+        if (effect.has("events"))
+        {
+            BaseType events = effect.get("events");
+
+            if (events.isMap())
+            {
+                this.parseEvents(scheme, events.asMap());
+            }
+        }
+
         this.parseComponents(scheme, this.getObject(effect, "components", "No particle_effect.components was found..."));
     }
 
@@ -202,6 +216,17 @@ public class ParticleParser
                 curve.fromData(data.asMap(), scheme.parser);
                 scheme.curves.put(entry.getKey(), curve);
             }
+        }
+    }
+
+    private void parseEvents(ParticleScheme scheme, MapType events) throws Exception
+    {
+        for (Map.Entry<String, BaseType> entry : events)
+        {
+            ParticleEvent event = new ParticleEvent();
+
+            event.fromData(entry.getValue(), scheme.parser);
+            scheme.events.put(entry.getKey(), event);
         }
     }
 

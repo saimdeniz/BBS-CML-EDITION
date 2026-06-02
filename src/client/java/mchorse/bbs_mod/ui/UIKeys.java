@@ -1176,6 +1176,7 @@ public class UIKeys
     public static final IKey SNOWSTORM_GENERAL_PARTICLES_ALPHA = L10n.lang("bbs.ui.snowstorm.general.particles_alpha");
     public static final IKey SNOWSTORM_GENERAL_PARTICLES_BLEND = L10n.lang("bbs.ui.snowstorm.general.particles_blend");
     public static final IKey SNOWSTORM_GENERAL_PARTICLES_OPAQUE = L10n.lang("bbs.ui.snowstorm.general.particles_opaque");
+    public static final IKey SNOWSTORM_GENERAL_PARTICLES_ADDITIVE = L10n.lang("bbs.ui.snowstorm.general.particles_additive");
     public static final IKey SNOWSTORM_GENERAL_PICK = L10n.lang("bbs.ui.snowstorm.general.pick");
     public static final IKey SNOWSTORM_GENERAL_TITLE = L10n.lang("bbs.ui.snowstorm.general.title");
     public static final IKey SNOWSTORM_INITIALIZATION_CREATION = L10n.lang("bbs.ui.snowstorm.initialization.creation");

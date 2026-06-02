@@ -117,23 +117,52 @@ public class MolangParser extends MathBuilder
     /**
      * Interactively return a new variable
      */
+    public String remapVariableName(String name)
+    {
+        if (name.length() >= 3 && name.charAt(1) == '.')
+        {
+            char prefix = name.charAt(0);
+            if (prefix == 'q') return "query." + name.substring(2);
+            if (prefix == 'v') return "variable." + name.substring(2);
+            if (prefix == 't') return "temp." + name.substring(2);
+            if (prefix == 'c') return "context." + name.substring(2);
+        }
+        return name;
+    }
+
     @Override
     protected Variable getVariable(String name)
     {
-        if (name.charAt(1) == '.')
-        {
-            if (name.charAt(0) == 'q')
-            {
-                name = "query." + name.substring(2);
-            }
-            else if (name.charAt(0) == 'v')
-            {
-                name = "variable." + name.substring(2);
-            }
-        }
+        name = this.remapVariableName(name);
 
         MolangMultiStatement currentStatement = this.currentStatement;
-        Variable variable = currentStatement == null ? null : currentStatement.locals.get(name);
+        Variable variable = null;
+
+        if (name.startsWith("temp."))
+        {
+            if (currentStatement != null)
+            {
+                variable = currentStatement.locals.get(name);
+
+                if (variable == null)
+                {
+                    variable = new Variable(name, 0);
+                    currentStatement.locals.put(name, variable);
+                }
+            }
+            else
+            {
+                variable = super.getVariable(name);
+                if (variable == null)
+                {
+                    variable = new Variable(name, 0);
+                    this.register(variable);
+                }
+            }
+            return variable;
+        }
+
+        variable = currentStatement == null ? null : currentStatement.locals.get(name);
 
         if (variable == null)
         {
@@ -152,6 +181,7 @@ public class MolangParser extends MathBuilder
 
     public Variable getOrCreateVariable(String key)
     {
+        key = this.remapVariableName(key);
         Variable variable = this.variables.get(key);
 
         if (variable == null)
@@ -186,6 +216,11 @@ public class MolangParser extends MathBuilder
 
     public MolangExpression parseData(BaseType data) throws MolangException
     {
+        if (data == null)
+        {
+            throw new MolangException("Data is null!");
+        }
+
         if (BaseType.isPrimitive(data))
         {
             if (BaseType.isString(data))
@@ -216,7 +251,7 @@ public class MolangParser extends MathBuilder
             }
         }
 
-        return ZERO;
+        throw new MolangException("Unsupported Molang data type: " + data.getClass().getSimpleName());
     }
 
     public MolangExpression parseGlobalData(BaseType data)
@@ -299,7 +334,7 @@ public class MolangParser extends MathBuilder
             /* Assignment it is */
             if (symbols.size() >= 3 && symbols.get(0) instanceof String && this.isVariable(symbols.get(0)) && symbols.get(1).equals("="))
             {
-                String name = (String) symbols.get(0);
+                String name = this.remapVariableName((String) symbols.get(0));
                 symbols = symbols.subList(2, symbols.size());
 
                 Variable variable = null;
